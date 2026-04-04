@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cerul"
-version = "0.0.1"
+version = "0.0.2"
 description = "Official Python SDK for the Cerul video search API"
 readme = "README.md"
 license = "MIT"

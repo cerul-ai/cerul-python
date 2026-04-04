@@ -1,53 +1,60 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
+from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional
 
 
+class _JsonMixin:
+    """Mixin for clean JSON output from dataclasses."""
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to a plain dict (removes None values)."""
+        return _strip_none(asdict(self))  # type: ignore[arg-type]
+
+    def to_json(self, indent: int = 2) -> str:
+        """Serialize to a JSON string."""
+        return json.dumps(self.to_dict(), indent=indent, ensure_ascii=False)
+
+    def __repr__(self) -> str:
+        return self.to_json()
+
+    def __str__(self) -> str:
+        return self.to_json()
+
+    def __getitem__(self, key: str) -> Any:
+        """Allow dict-style access: result['title']."""
+        return getattr(self, key)
+
+
+def _strip_none(d: Any) -> Any:
+    if isinstance(d, dict):
+        return {k: _strip_none(v) for k, v in d.items() if v is not None}
+    if isinstance(d, list):
+        return [_strip_none(i) for i in d]
+    return d
+
+
 @dataclass(frozen=True)
-class SearchFilters:
+class SearchFilters(_JsonMixin):
     speaker: Optional[str] = None
     published_after: Optional[str] = None
     min_duration: Optional[int] = None
     max_duration: Optional[int] = None
     source: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            key: value
-            for key, value in {
-                "speaker": self.speaker,
-                "published_after": self.published_after,
-                "min_duration": self.min_duration,
-                "max_duration": self.max_duration,
-                "source": self.source,
-            }.items()
-            if value is not None
-        }
-
 
 @dataclass(frozen=True)
-class SearchRequest:
+class SearchRequest(_JsonMixin):
     query: str
     max_results: int = 10
     ranking_mode: str = "embedding"
     include_answer: bool = False
     filters: Optional[SearchFilters] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        payload: Dict[str, Any] = {
-            "query": self.query,
-            "max_results": self.max_results,
-            "ranking_mode": self.ranking_mode,
-            "include_answer": self.include_answer,
-        }
-        if self.filters is not None:
-            payload["filters"] = self.filters.to_dict()
-        return payload
-
 
 @dataclass(frozen=True)
-class SearchResult:
+class SearchResult(_JsonMixin):
     id: str
     score: float
     url: str
@@ -65,7 +72,7 @@ class SearchResult:
 
 
 @dataclass(frozen=True)
-class SearchResponse:
+class SearchResponse(_JsonMixin):
     results: List[SearchResult]
     credits_used: int
     credits_remaining: int
@@ -74,21 +81,21 @@ class SearchResponse:
 
 
 @dataclass(frozen=True)
-class CreditBreakdown:
+class CreditBreakdown(_JsonMixin):
     included_remaining: int
     bonus_remaining: int
     paid_remaining: int
 
 
 @dataclass(frozen=True)
-class ExpiringCredit:
+class ExpiringCredit(_JsonMixin):
     grant_type: str
     credits: int
     expires_at: str
 
 
 @dataclass(frozen=True)
-class UsageResponse:
+class UsageResponse(_JsonMixin):
     tier: str
     plan_code: str
     period_start: str
