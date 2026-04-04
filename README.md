@@ -1,5 +1,9 @@
 <div align="center">
-  <h1>cerul</h1>
+  <br />
+  <a href="https://cerul.ai">
+    <img src="https://raw.githubusercontent.com/cerul-ai/cerul/main/assets/logo.png" alt="Cerul" width="80" />
+  </a>
+  <h1>Cerul Python SDK</h1>
   <p><strong>The video search layer for AI agents.</strong></p>
 
   <p>
