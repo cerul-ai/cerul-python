@@ -79,6 +79,17 @@ class SearchResponse(_JsonMixin):
     request_id: str
     answer: Optional[str] = None
 
+    def __iter__(self):
+        return iter(self.results)
+
+    def __len__(self) -> int:
+        return len(self.results)
+
+    def __getitem__(self, index):
+        if isinstance(index, int):
+            return self.results[index]
+        return getattr(self, index)
+
 
 @dataclass(frozen=True)
 class CreditBreakdown(_JsonMixin):
