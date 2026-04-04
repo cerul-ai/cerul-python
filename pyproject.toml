@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cerul"
-version = "0.0.4"
-description = "Official Python SDK for the Cerul video search API"
+version = "0.0.5"
+description = "The video search layer for AI agents — Python SDK"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
