@@ -157,23 +157,25 @@ def _build_search_response(payload: Mapping[str, Any]) -> SearchResponse:
 
 def _build_usage_response(payload: Mapping[str, Any]) -> UsageResponse:
     breakdown_payload = payload.get("credit_breakdown")
-    expiring_payload = payload.get("expiring_credits") or []
+    expiring_payload = payload["expiring_credits"]
+    if not isinstance(breakdown_payload, Mapping):
+        raise KeyError("credit_breakdown")
+    if not isinstance(expiring_payload, list):
+        raise TypeError("expiring_credits must be a list")
     return UsageResponse(
         tier=str(payload["tier"]),
-        plan_code=str(payload["plan_code"]) if payload.get("plan_code") is not None else None,
+        plan_code=str(payload["plan_code"]),
         period_start=str(payload["period_start"]),
         period_end=str(payload["period_end"]),
         credits_limit=int(payload["credits_limit"]),
         credits_used=int(payload["credits_used"]),
         credits_remaining=int(payload["credits_remaining"]),
-        wallet_balance=int(payload["wallet_balance"]) if payload.get("wallet_balance") is not None else None,
+        wallet_balance=int(payload["wallet_balance"]),
         credit_breakdown=CreditBreakdown(
             included_remaining=int(breakdown_payload["included_remaining"]),
             bonus_remaining=int(breakdown_payload["bonus_remaining"]),
             paid_remaining=int(breakdown_payload["paid_remaining"]),
-        )
-        if isinstance(breakdown_payload, Mapping)
-        else None,
+        ),
         expiring_credits=[
             ExpiringCredit(
                 grant_type=str(item["grant_type"]),
@@ -184,9 +186,9 @@ def _build_usage_response(payload: Mapping[str, Any]) -> UsageResponse:
         ],
         rate_limit_per_sec=int(payload["rate_limit_per_sec"]),
         api_keys_active=int(payload["api_keys_active"]),
-        billing_hold=bool(payload["billing_hold"]) if payload.get("billing_hold") is not None else None,
-        daily_free_remaining=int(payload["daily_free_remaining"]) if payload.get("daily_free_remaining") is not None else None,
-        daily_free_limit=int(payload["daily_free_limit"]) if payload.get("daily_free_limit") is not None else None,
+        billing_hold=bool(payload["billing_hold"]),
+        daily_free_remaining=int(payload["daily_free_remaining"]),
+        daily_free_limit=int(payload["daily_free_limit"]),
     )
 
 
@@ -210,6 +212,7 @@ class Cerul:
                 "Accept": "application/json",
                 "Content-Type": "application/json",
                 "User-Agent": _user_agent(),
+                "X-Cerul-Client-Source": "sdk-python",
             },
             transport=transport,
         )
@@ -287,6 +290,7 @@ class AsyncCerul:
                 "Accept": "application/json",
                 "Content-Type": "application/json",
                 "User-Agent": _user_agent(),
+                "X-Cerul-Client-Source": "sdk-python",
             },
             transport=transport,
         )

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Mapping, Optional
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 
 @dataclass(frozen=True)
@@ -90,20 +90,17 @@ class ExpiringCredit:
 @dataclass(frozen=True)
 class UsageResponse:
     tier: str
+    plan_code: str
     period_start: str
     period_end: str
     credits_limit: int
     credits_used: int
     credits_remaining: int
+    wallet_balance: int
+    credit_breakdown: CreditBreakdown
+    expiring_credits: List[ExpiringCredit]
     rate_limit_per_sec: int
     api_keys_active: int
-    plan_code: Optional[str] = None
-    wallet_balance: Optional[int] = None
-    credit_breakdown: Optional[CreditBreakdown] = None
-    expiring_credits: List[ExpiringCredit] = field(default_factory=list)
-    billing_hold: Optional[bool] = None
-    daily_free_remaining: Optional[int] = None
-    daily_free_limit: Optional[int] = None
-
-
-FiltersInput = Optional[Mapping[str, Any]]
+    billing_hold: bool
+    daily_free_remaining: int
+    daily_free_limit: int

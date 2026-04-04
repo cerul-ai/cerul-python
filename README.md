@@ -44,12 +44,9 @@ from cerul import AsyncCerul
 
 
 async def main() -> None:
-    client = AsyncCerul(api_key="cerul_sk_...")
-    try:
+    async with AsyncCerul(api_key="cerul_sk_...") as client:
         result = await client.search(query="computer vision", max_results=3)
         print(len(result.results))
-    finally:
-        await client.close()
 
 
 asyncio.run(main())

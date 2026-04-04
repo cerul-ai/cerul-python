@@ -15,6 +15,7 @@ class CerulClientTests(unittest.TestCase):
             self.assertEqual(request.method, "POST")
             self.assertEqual(str(request.url), "https://api.cerul.ai/v1/search")
             self.assertEqual(request.headers["Authorization"], "Bearer cerul_sk_test")
+            self.assertEqual(request.headers["X-Cerul-Client-Source"], "sdk-python")
             self.assertEqual(
                 json.loads(request.content.decode("utf-8")),
                 {
@@ -62,13 +63,24 @@ class CerulClientTests(unittest.TestCase):
                 200,
                 json={
                     "tier": "free",
+                    "plan_code": "free",
                     "period_start": "2026-04-01",
                     "period_end": "2026-04-30",
                     "credits_limit": 0,
                     "credits_used": 1,
                     "credits_remaining": 9,
+                    "wallet_balance": 9,
+                    "credit_breakdown": {
+                        "included_remaining": 0,
+                        "bonus_remaining": 9,
+                        "paid_remaining": 0,
+                    },
+                    "expiring_credits": [],
                     "rate_limit_per_sec": 1,
                     "api_keys_active": 1,
+                    "billing_hold": False,
+                    "daily_free_remaining": 9,
+                    "daily_free_limit": 10,
                 },
             )
 
@@ -94,6 +106,7 @@ class CerulClientTests(unittest.TestCase):
                 await client.close()
 
             self.assertEqual(error.exception.code, "timeout")
+            self.assertEqual(error.exception.status_code, 0)
 
         asyncio.run(run_test())
 
