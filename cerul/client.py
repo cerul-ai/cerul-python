@@ -21,13 +21,10 @@ from .types import (
     UsageResponse,
 )
 
-DEFAULT_BASE_URL = "https://api.cerul.ai"
+BASE_URL = "https://api.cerul.ai"
 DEFAULT_TIMEOUT = 30.0
 MAX_RETRY_ATTEMPTS = 3
-
-
-def _normalize_base_url(base_url: Optional[str]) -> str:
-    return (base_url or DEFAULT_BASE_URL).rstrip("/")
+MAX_RETRY_DELAY = 60.0
 
 
 def _resolve_api_key(api_key: Optional[str]) -> str:
@@ -104,22 +101,25 @@ def _parse_error_response(response: httpx.Response) -> CerulError:
 
 def _retry_after_seconds(response: httpx.Response, attempt: int) -> float:
     retry_after = response.headers.get("retry-after")
+    delay: Optional[float] = None
     if retry_after:
         try:
             value = float(retry_after)
             if value >= 0:
-                return value
+                delay = value
         except ValueError:
             try:
                 dt = parsedate_to_datetime(retry_after)
-                return max(dt.timestamp() - time.time(), 0.0)
+                delay = max(dt.timestamp() - time.time(), 0.0)
             except (TypeError, ValueError, OverflowError):
                 pass
-    return 0.25 * (2 ** (attempt - 1))
+    if delay is None:
+        delay = 0.25 * (2 ** (attempt - 1))
+    return min(delay, MAX_RETRY_DELAY)
 
 
-def _should_retry(status_code: int, retry_enabled: bool) -> bool:
-    return retry_enabled and (status_code == 429 or status_code >= 500)
+def _should_retry_status(status_code: int) -> bool:
+    return status_code == 429 or status_code >= 500
 
 
 def _user_agent() -> str:
@@ -196,7 +196,6 @@ class Cerul:
     def __init__(
         self,
         api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
         timeout: float = DEFAULT_TIMEOUT,
         retry: bool = False,
         transport: Optional[httpx.BaseTransport] = None,
@@ -205,7 +204,7 @@ class Cerul:
             raise ValueError("timeout must be a positive number")
         self._retry = retry
         self._client = httpx.Client(
-            base_url=_normalize_base_url(base_url),
+            base_url=BASE_URL,
             timeout=timeout,
             headers={
                 "Authorization": f"Bearer {_resolve_api_key(api_key)}",
@@ -231,15 +230,21 @@ class Cerul:
             try:
                 response = self._client.request(method, path, json=json)
             except httpx.TimeoutException as error:
+                if attempt < MAX_RETRY_ATTEMPTS and self._retry:
+                    time.sleep(min(0.25 * (2 ** (attempt - 1)), MAX_RETRY_DELAY))
+                    continue
                 raise CerulError(0, "timeout", "The request timed out.") from error
             except httpx.HTTPError as error:
+                if attempt < MAX_RETRY_ATTEMPTS and self._retry:
+                    time.sleep(min(0.25 * (2 ** (attempt - 1)), MAX_RETRY_DELAY))
+                    continue
                 raise CerulError(0, "network_error", str(error)) from error
 
             if response.is_success:
                 return response.json()
 
             error = _parse_error_response(response)
-            if attempt < MAX_RETRY_ATTEMPTS and _should_retry(response.status_code, self._retry):
+            if attempt < MAX_RETRY_ATTEMPTS and self._retry and _should_retry_status(response.status_code):
                 time.sleep(_retry_after_seconds(response, attempt))
                 continue
             raise error
@@ -274,7 +279,6 @@ class AsyncCerul:
     def __init__(
         self,
         api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
         timeout: float = DEFAULT_TIMEOUT,
         retry: bool = False,
         transport: Optional[httpx.AsyncBaseTransport] = None,
@@ -283,7 +287,7 @@ class AsyncCerul:
             raise ValueError("timeout must be a positive number")
         self._retry = retry
         self._client = httpx.AsyncClient(
-            base_url=_normalize_base_url(base_url),
+            base_url=BASE_URL,
             timeout=timeout,
             headers={
                 "Authorization": f"Bearer {_resolve_api_key(api_key)}",
@@ -309,15 +313,21 @@ class AsyncCerul:
             try:
                 response = await self._client.request(method, path, json=json)
             except httpx.TimeoutException as error:
+                if attempt < MAX_RETRY_ATTEMPTS and self._retry:
+                    await asyncio.sleep(min(0.25 * (2 ** (attempt - 1)), MAX_RETRY_DELAY))
+                    continue
                 raise CerulError(0, "timeout", "The request timed out.") from error
             except httpx.HTTPError as error:
+                if attempt < MAX_RETRY_ATTEMPTS and self._retry:
+                    await asyncio.sleep(min(0.25 * (2 ** (attempt - 1)), MAX_RETRY_DELAY))
+                    continue
                 raise CerulError(0, "network_error", str(error)) from error
 
             if response.is_success:
                 return response.json()
 
             error = _parse_error_response(response)
-            if attempt < MAX_RETRY_ATTEMPTS and _should_retry(response.status_code, self._retry):
+            if attempt < MAX_RETRY_ATTEMPTS and self._retry and _should_retry_status(response.status_code):
                 await asyncio.sleep(_retry_after_seconds(response, attempt))
                 continue
             raise error
