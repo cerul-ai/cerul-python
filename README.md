@@ -5,27 +5,31 @@
   </a>
   <h1>Cerul Python SDK</h1>
   <p><strong>The video search layer for AI agents.</strong></p>
+  <p>Teach your AI agents to see — search by meaning across visual scenes, speech, and on-screen content.</p>
+
+  <p>
+    <a href="https://cerul.ai/docs"><strong>Docs</strong></a> &middot;
+    <a href="https://cerul.ai"><strong>Website</strong></a> &middot;
+    <a href="https://github.com/cerul-ai/cerul"><strong>Main Repo</strong></a> &middot;
+    <a href="https://x.com/cerul_hq"><img src="https://img.shields.io/badge/follow-%40cerul__hq-000?style=flat-square&logo=x" alt="Follow on X" /></a>
+  </p>
 
   <p>
     <a href="https://pypi.org/project/cerul/"><img alt="PyPI" src="https://img.shields.io/pypi/v/cerul?style=flat-square&color=3b82f6" /></a>
     <a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-3b82f6?style=flat-square" /></a>
     <img alt="Python" src="https://img.shields.io/badge/python-3.9%2B-22c55e?style=flat-square" />
   </p>
-
-  <p>
-    <a href="https://cerul.ai/docs">Docs</a> &middot;
-    <a href="https://cerul.ai">Website</a> &middot;
-    <a href="https://github.com/cerul-ai/cerul">GitHub</a>
-  </p>
 </div>
 
 <br />
 
-Search what was said, shown, or presented in any video — tech talks, podcasts, conference presentations, and earnings calls.
+## Install
 
 ```bash
 pip install cerul
 ```
+
+## Quick Start
 
 ```python
 from cerul import Cerul
@@ -53,9 +57,6 @@ result = client.search(
 # AI-generated answer
 print(result.answer)
 
-# Results print as JSON
-print(result[0])
-
 # Check credits
 usage = client.usage()
 print(f"{usage.credits_remaining} credits remaining")
@@ -80,7 +81,7 @@ client = Cerul(
 )
 ```
 
-## Error handling
+## Error Handling
 
 ```python
 from cerul import CerulError
@@ -93,9 +94,9 @@ except CerulError as e:
 
 ## Links
 
+- [CLI](https://github.com/cerul-ai/cerul-cli) — `curl -fsSL https://cli.cerul.ai/install.sh | bash`
 - [TypeScript SDK](https://www.npmjs.com/package/cerul) — `npm install cerul`
-- [CLI](https://github.com/cerul-ai/cerul-cli) — `curl -fsSL .../install.sh | bash`
-- [Main repo](https://github.com/cerul-ai/cerul) — API, docs, skills, remote MCP
+- [Main repo](https://github.com/cerul-ai/cerul) — docs, skills, remote MCP
 
 ## License
 
