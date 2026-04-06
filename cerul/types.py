@@ -67,6 +67,8 @@ class SearchResult(_JsonMixin):
     thumbnail_url: Optional[str] = None
     keyframe_url: Optional[str] = None
     speaker: Optional[str] = None
+    published_at: Optional[str] = None
+    language: Optional[str] = None
     timestamp_start: Optional[float] = None
     timestamp_end: Optional[float] = None
 
